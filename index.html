@@ -1,50 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Zaino di Carlo</title>
+    <title>Zaino di Carlo - LED Control</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <style>
-        body { font-family: -apple-system, sans-serif; background: #000; color: white; text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 400px; margin: auto; background: #1a1a1a; padding: 25px; border-radius: 30px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* Grafica Intestazione con Logo */
-        .header { margin-bottom: 25px; }
-        .header img { width: 80px; height: 80px; margin-bottom: 10px; border-radius: 15px; } /* Stile per il tuo logo */
-        .header h1 { color: #007bff; margin: 0; font-size: 26px; letter-spacing: 1px; }
-        .header p { font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background: #0a0a0a; 
+            color: white; 
+            margin: 0; 
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
 
-        .tab-bar { display: flex; background: #222; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; color: #888; transition: 0.3s; }
+        .container { 
+            width: 100%;
+            max-width: 400px; 
+            background: #161616; 
+            padding: 20px; 
+            border-radius: 25px; 
+            border: 1px solid #222; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+        }
+        
+        /* HEADER COMPATTO: LOGO A SINISTRA + TESTO */
+        .header { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            margin-bottom: 25px; 
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222;
+        }
+
+        .header img { 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 12px; 
+            object-fit: cover;
+            border: 1px solid #333;
+        }
+
+        .header-text {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+        }
+
+        .header h1 { 
+            color: #007bff; 
+            margin: 0; 
+            font-size: 20px; 
+            letter-spacing: 0.5px;
+            font-weight: 800;
+        }
+
+        .header p { 
+            font-size: 10px; 
+            color: #777; 
+            margin: 2px 0 0 0; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* TAB BAR */
+        .tab-bar { display: flex; background: #222; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #666; transition: 0.3s; text-align: center; }
         .tab.active { background: #007bff; color: white; }
 
+        /* PREVIEW AREA */
         #preview-list { 
-            display: flex; flex-direction: column; gap: 15px; 
-            max-height: 400px; overflow-y: auto; margin: 20px 0;
-            padding: 10px; background: #0f0f0f; border-radius: 20px; border: 1px solid #222;
+            display: flex; flex-direction: column; gap: 12px; 
+            max-height: 300px; overflow-y: auto; margin: 15px 0;
+            padding: 10px; background: #0c0c0c; border-radius: 15px; border: 1px solid #1f1f1f;
         }
-        .preview-card { background: #252525; padding: 10px; border-radius: 15px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
-        .preview-card img { width: 100px; height: 200px; image-rendering: pixelated; border-radius: 5px; background: #000; }
-        .preview-card span { display: block; margin-top: 8px; font-size: 14px; color: #007bff; font-weight: bold; }
+        .preview-card { background: #1e1e1e; padding: 8px; border-radius: 12px; border: 1px solid #2a2a2a; display: flex; flex-direction: column; align-items: center; }
+        .preview-card img { width: 80px; height: 160px; image-rendering: pixelated; border-radius: 4px; background: #000; }
+        .preview-card span { margin-top: 6px; font-size: 12px; color: #007bff; font-weight: bold; }
 
-        button { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; margin: 5px 0; transition: 0.2s; }
-        .btn-select { background: #333; color: white; }
-        .btn-send { background: #28a745; color: white; box-shadow: 0 5px 15px rgba(40,167,69,0.3); }
-        .btn-send:active { transform: scale(0.98); }
+        /* PULSANTI */
+        button { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin: 6px 0; transition: 0.2s; }
+        .btn-select { background: #2a2a2a; color: #eee; }
+        .btn-send { background: #28a745; color: white; box-shadow: 0 4px 12px rgba(40,167,69,0.2); margin-top: 15px; }
+        .btn-send:active { transform: scale(0.97); }
         
-        .status { font-size: 14px; color: #007bff; margin-top: 15px; font-weight: bold; }
+        .status { font-size: 13px; color: #007bff; margin-top: 15px; font-weight: 600; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <img src="logo.png" alt="Logo ZC"> 
-        <h1>ZAINO DI CARLO</h1>
-        <p>Controllo Remoto Display LED</p>
+        <img src="logo.png" alt="ZC"> 
+        <div class="header-text">
+            <h1>ZAINO DI CARLO</h1>
+            <p>Controllo Remoto LED</p>
+        </div>
     </div>
 
     <div class="tab-bar">
@@ -56,7 +112,7 @@
     <button class="btn-select" onclick="document.getElementById('fileInp').click()">📂 SELEZIONA FOTO</button>
 
     <div id="preview-list">
-        <p id="empty-msg" style="color: #444; margin-top: 50px;">Nessuna foto selezionata</p>
+        <p id="empty-msg" style="color: #444; margin-top: 40px; text-align: center;">Nessuna foto selezionata</p>
     </div>
 
     <button class="btn-send" onclick="connectAndSend()">🚀 INVIA ALLO ZAINO</button>
@@ -66,7 +122,6 @@
 <canvas id="procCanvas" width="16" height="32" style="display:none"></canvas>
 
 <script>
-    // [Il resto del codice Javascript rimane identico a prima]
     let currentMode = 0; 
     let imagesData = [];
     let bleChar = null;
@@ -78,7 +133,7 @@
         document.getElementById('tPlaylist').className = m==1 ? "tab active" : "tab";
         document.getElementById('fileInp').multiple = (m==1);
         imagesData = [];
-        document.getElementById('preview-list').innerHTML = '<p id="empty-msg" style="color: #444; margin-top: 50px;">Nessuna foto selezionata</p>';
+        document.getElementById('preview-list').innerHTML = '<p id="empty-msg" style="color: #444; margin-top: 40px; text-align: center;">Nessuna foto selezionata</p>';
     }
 
     document.getElementById('fileInp').onchange = async (e) => {
@@ -102,7 +157,7 @@
 
             const card = document.createElement('div');
             card.className = "preview-card";
-            card.innerHTML = `<img src="${canvas.toDataURL()}"><span>${currentMode==0 ? 'IMMAGINE' : 'FOTO #' + (i + 1)}</span>`;
+            card.innerHTML = `<img src="${canvas.toDataURL()}"><span>${currentMode==0 ? 'FOTO' : 'FOTO #' + (i + 1)}</span>`;
             list.appendChild(card);
         }
     };
@@ -126,7 +181,7 @@
     async function connectAndSend() {
         if(imagesData.length === 0) return alert("Scegli le foto!");
         try {
-            document.getElementById('status').innerText = "Cercando lo zaino...";
+            document.getElementById('status').innerText = "CERCANDO LO ZAINO...";
             const device = await navigator.bluetooth.requestDevice({
                 filters: [{ name: 'Schermo LED' }],
                 optionalServices: ['19b10000-e8f2-537e-4f6c-d104768a1214']
@@ -139,7 +194,7 @@
             const mVal = currentMode === 0 ? 0 : imagesData.length;
             await bleMode.writeValue(new Uint8Array([mVal]));
 
-            document.getElementById('status').innerText = "Invio in corso...";
+            document.getElementById('status').innerText = "INVIO IN CORSO...";
             for (let data of imagesData) {
                 let rgb = [];
                 for (let i = 0; i < data.length; i += 4) rgb.push(data[i], data[i+1], data[i+2]);
@@ -148,8 +203,11 @@
                     await new Promise(r => setTimeout(r, 40));
                 }
             }
-            document.getElementById('status').innerText = "ZAINO AGGIORNATO!";
-        } catch (e) { document.getElementById('status').innerText = "ERRORE BLUETOOTH"; }
+            document.getElementById('status').innerText = "ZAINO AGGIORNATO! ✅";
+        } catch (e) { 
+            document.getElementById('status').innerText = "ERRORE BLUETOOTH ❌"; 
+            console.log(e);
+        }
     }
 </script>
 </body>

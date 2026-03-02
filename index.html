@@ -11,8 +11,9 @@
         body { font-family: -apple-system, sans-serif; background: #000; color: white; text-align: center; margin: 0; padding: 20px; }
         .container { max-width: 400px; margin: auto; background: #1a1a1a; padding: 25px; border-radius: 30px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
-        /* Grafica Intestazione */
+        /* Grafica Intestazione con Logo */
         .header { margin-bottom: 25px; }
+        .header img { width: 80px; height: 80px; margin-bottom: 10px; border-radius: 15px; } /* Stile per il tuo logo */
         .header h1 { color: #007bff; margin: 0; font-size: 26px; letter-spacing: 1px; }
         .header p { font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; }
 
@@ -41,6 +42,7 @@
 
 <div class="container">
     <div class="header">
+        <img src="logo.png" alt="Logo ZC"> 
         <h1>ZAINO DI CARLO</h1>
         <p>Controllo Remoto Display LED</p>
     </div>
@@ -64,7 +66,7 @@
 <canvas id="procCanvas" width="16" height="32" style="display:none"></canvas>
 
 <script>
-    // --- LOGICA ORIGINALE NON TOCCATA ---
+    // [Il resto del codice Javascript rimane identico a prima]
     let currentMode = 0; 
     let imagesData = [];
     let bleChar = null;

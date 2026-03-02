@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Zaino di Carlo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        body { font-family: -apple-system, sans-serif; background: #000; color: white; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #1a1a1a; padding: 25px; border-radius: 30px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* Grafica Intestazione */
+        .header { margin-bottom: 25px; }
+        .header h1 { color: #007bff; margin: 0; font-size: 26px; letter-spacing: 1px; }
+        .header p { font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; }
+
+        .tab-bar { display: flex; background: #222; border-radius: 15px; padding: 5px; margin-bottom: 20px; }
+        .tab { flex: 1; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: bold; color: #888; transition: 0.3s; }
+        .tab.active { background: #007bff; color: white; }
+
+        #preview-list { 
+            display: flex; flex-direction: column; gap: 15px; 
+            max-height: 400px; overflow-y: auto; margin: 20px 0;
+            padding: 10px; background: #0f0f0f; border-radius: 20px; border: 1px solid #222;
+        }
+        .preview-card { background: #252525; padding: 10px; border-radius: 15px; border: 1px solid #333; display: flex; flex-direction: column; align-items: center; }
+        .preview-card img { width: 100px; height: 200px; image-rendering: pixelated; border-radius: 5px; background: #000; }
+        .preview-card span { display: block; margin-top: 8px; font-size: 14px; color: #007bff; font-weight: bold; }
+
+        button { width: 100%; padding: 20px; border-radius: 15px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; margin: 5px 0; transition: 0.2s; }
+        .btn-select { background: #333; color: white; }
+        .btn-send { background: #28a745; color: white; box-shadow: 0 5px 15px rgba(40,167,69,0.3); }
+        .btn-send:active { transform: scale(0.98); }
+        
+        .status { font-size: 14px; color: #007bff; margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>ZAINO DI CARLO</h1>
+        <p>Controllo Remoto Display LED</p>
+    </div>
+
+    <div class="tab-bar">
+        <div id="tSingola" class="tab active" onclick="switchMode(0)">SINGOLA</div>
+        <div id="tPlaylist" class="tab" onclick="switchMode(1)">PLAYLIST</div>
+    </div>
+
+    <input type="file" id="fileInp" accept="image/*" style="display:none">
+    <button class="btn-select" onclick="document.getElementById('fileInp').click()">📂 SELEZIONA FOTO</button>
+
+    <div id="preview-list">
+        <p id="empty-msg" style="color: #444; margin-top: 50px;">Nessuna foto selezionata</p>
+    </div>
+
+    <button class="btn-send" onclick="connectAndSend()">🚀 INVIA ALLO ZAINO</button>
+    <div id="status" class="status">DISCONNESSO</div>
+</div>
+
+<canvas id="procCanvas" width="16" height="32" style="display:none"></canvas>
+
+<script>
+    // --- LOGICA ORIGINALE NON TOCCATA ---
+    let currentMode = 0; 
+    let imagesData = [];
+    let bleChar = null;
+    let bleMode = null;
+
+    function switchMode(m) {
+        currentMode = m;
+        document.getElementById('tSingola').className = m==0 ? "tab active" : "tab";
+        document.getElementById('tPlaylist').className = m==1 ? "tab active" : "tab";
+        document.getElementById('fileInp').multiple = (m==1);
+        imagesData = [];
+        document.getElementById('preview-list').innerHTML = '<p id="empty-msg" style="color: #444; margin-top: 50px;">Nessuna foto selezionata</p>';
+    }
+
+    document.getElementById('fileInp').onchange = async (e) => {
+        const files = Array.from(e.target.files).slice(0, 20);
+        if(files.length === 0) return;
+
+        imagesData = [];
+        const list = document.getElementById('preview-list');
+        list.innerHTML = ""; 
+
+        for (let i = 0; i < files.length; i++) {
+            const dataUrl = await readFileAsDataURL(files[i]);
+            const img = await loadImage(dataUrl);
+            
+            const canvas = document.getElementById('procCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 16, 32);
+            ctx.drawImage(img, 0, 0, 16, 32);
+            
+            imagesData.push(ctx.getImageData(0,0,16,32).data);
+
+            const card = document.createElement('div');
+            card.className = "preview-card";
+            card.innerHTML = `<img src="${canvas.toDataURL()}"><span>${currentMode==0 ? 'IMMAGINE' : 'FOTO #' + (i + 1)}</span>`;
+            list.appendChild(card);
+        }
+    };
+
+    function readFileAsDataURL(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function loadImage(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = url;
+        });
+    }
+
+    async function connectAndSend() {
+        if(imagesData.length === 0) return alert("Scegli le foto!");
+        try {
+            document.getElementById('status').innerText = "Cercando lo zaino...";
+            const device = await navigator.bluetooth.requestDevice({
+                filters: [{ name: 'Schermo LED' }],
+                optionalServices: ['19b10000-e8f2-537e-4f6c-d104768a1214']
+            });
+            const server = await device.gatt.connect();
+            const service = await server.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1214');
+            bleChar = await service.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
+            bleMode = await service.getCharacteristic('19b10002-e8f2-537e-4f6c-d104768a1214');
+
+            const mVal = currentMode === 0 ? 0 : imagesData.length;
+            await bleMode.writeValue(new Uint8Array([mVal]));
+
+            document.getElementById('status').innerText = "Invio in corso...";
+            for (let data of imagesData) {
+                let rgb = [];
+                for (let i = 0; i < data.length; i += 4) rgb.push(data[i], data[i+1], data[i+2]);
+                for (let i = 0; i < rgb.length; i += 450) {
+                    await bleChar.writeValueWithoutResponse(new Uint8Array(rgb.slice(i, i + 450)));
+                    await new Promise(r => setTimeout(r, 40));
+                }
+            }
+            document.getElementById('status').innerText = "ZAINO AGGIORNATO!";
+        } catch (e) { document.getElementById('status').innerText = "ERRORE BLUETOOTH"; }
+    }
+</script>
+</body>
+</html>

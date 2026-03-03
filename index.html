@@ -42,7 +42,7 @@
         .header h1 { color: #007bff; margin: 0; font-size: 20px; font-weight: 800; }
         .header p { font-size: 10px; color: #777; margin: 2px 0 0 0; text-transform: uppercase; }
 
-        /* PULSANTE INFO IN ALTO A DESTRA */
+        /* PULSANTE INFO (SOLO CLICK) */
         .info-btn {
             position: absolute;
             top: 20px;
@@ -62,9 +62,9 @@
             transition: 0.3s;
             z-index: 100;
         }
-        .info-btn:hover { background: #007bff; color: white; }
+        .info-btn:active { transform: scale(0.9); }
 
-        /* POP-UP (MODALE) */
+        /* POP-UP (MODALE FISSO) */
         .modal {
             display: none;
             position: absolute;
@@ -75,7 +75,7 @@
             color: #333;
             padding: 20px;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
             z-index: 200;
             animation: fadeIn 0.3s ease;
         }
@@ -84,7 +84,7 @@
         .modal h3 { margin-top: 0; color: #007bff; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .info-section { margin-bottom: 15px; font-size: 13px; line-height: 1.5; }
         .info-section b { color: #000; display: block; margin-bottom: 3px; }
-        .close-btn { background: #f0f0f0; color: #333; padding: 8px; border-radius: 10px; font-size: 12px; text-align: center; cursor: pointer; font-weight: bold; }
+        .close-btn { background: #007bff; color: white; padding: 12px; border-radius: 10px; font-size: 13px; text-align: center; cursor: pointer; font-weight: bold; margin-top: 5px; }
 
         /* UI GENERALE */
         .tab-bar { display: flex; background: #222; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
@@ -95,12 +95,14 @@
         .btn-select { background: #2a2a2a; color: #eee; }
         .btn-send { background: #28a745; color: white; }
         .status { font-size: 13px; color: #007bff; margin-top: 15px; text-align: center; font-weight: 600; }
+        
+        .footer-invite { margin-top: 20px; text-align: center; font-size: 13px; color: #bbb; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="info-btn" id="infoBtn" onclick="toggleModal()" onmouseenter="showModal()" onmouseleave="hideModal()">i</div>
+    <div class="info-btn" onclick="openModal()">i</div>
 
     <div class="modal" id="infoModal">
         <h3>Guida all'uso</h3>
@@ -116,7 +118,7 @@
             • <b>Playlist:</b> Carica più foto che ruoteranno ogni minuto creando un'animazione.
         </div>
 
-       <div class="info-section">
+        <div class="info-section">
             <b>🔄 Chi arriva ultimo vince!</b>
             Se invii un'immagine mentre ce n'è già una sullo zaino, la tua prenderà il posto della precedente. È una sfida all'ultimo pixel!
         </div>
@@ -131,7 +133,7 @@
            Zaino di Carlo è un progetto di Carlo Messaggi. Tutti i diritti riservati.
         </div>
 
-        <div class="close-btn" onclick="toggleModal()">HO CAPITO</div>
+        <div class="close-btn" onclick="closeModal()">HO CAPITO</div>
     </div>
 
     <div class="header">
@@ -156,16 +158,20 @@
 
     <button class="btn-send" onclick="connectAndSend()">🚀 INVIA ALLO ZAINO</button>
     <div id="status" class="status">DISCONNESSO</div>
+
+    <div class="footer-invite">
+        Tocca a te: carica un'immagine e colora il mio zaino! ✨
+    </div>
 </div>
 
 <canvas id="procCanvas" width="16" height="32" style="display:none"></canvas>
 
 <script>
-    // Funzioni per il Pop-up
     const modal = document.getElementById('infoModal');
-    function toggleModal() { modal.style.display = (modal.style.display === 'block') ? 'none' : 'block'; }
-    function showModal() { if(window.innerWidth > 800) modal.style.display = 'block'; }
-    function hideModal() { if(window.innerWidth > 800) modal.style.display = 'none'; }
+
+    // Funzioni semplificate: apri solo con click, chiudi solo con tasto
+    function openModal() { modal.style.display = 'block'; }
+    function closeModal() { modal.style.display = 'none'; }
 
     let currentMode = 0; 
     let imagesData = [];
@@ -217,9 +223,7 @@
             const service = await server.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1214');
             const bleChar = await service.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
             const bleMode = await service.getCharacteristic('19b10002-e8f2-537e-4f6c-d104768a1214');
-
             await bleMode.writeValue(new Uint8Array([currentMode === 0 ? 0 : imagesData.length]));
-
             for (let data of imagesData) {
                 let rgb = [];
                 for (let i = 0; i < data.length; i += 4) rgb.push(data[i], data[i+1], data[i+2]);

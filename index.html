@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <title>Zaino di Carlo - LED Control</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <style>
         body { 
@@ -26,9 +24,10 @@
             border-radius: 25px; 
             border: 1px solid #222; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.7); 
+            position: relative;
         }
         
-        /* HEADER COMPATTO: LOGO A SINISTRA + TESTO */
+        /* HEADER */
         .header { 
             display: flex; 
             align-items: center; 
@@ -38,63 +37,93 @@
             border-bottom: 1px solid #222;
         }
 
-        .header img { 
-            width: 55px; 
-            height: 55px; 
-            border-radius: 12px; 
-            object-fit: cover;
-            border: 1px solid #333;
-        }
+        .header img { width: 55px; height: 55px; border-radius: 12px; object-fit: cover; border: 1px solid #333; }
+        .header-text { display: flex; flex-direction: column; text-align: left; }
+        .header h1 { color: #007bff; margin: 0; font-size: 20px; font-weight: 800; }
+        .header p { font-size: 10px; color: #777; margin: 2px 0 0 0; text-transform: uppercase; }
 
-        .header-text {
+        /* PULSANTE INFO IN ALTO A DESTRA */
+        .info-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 28px;
+            height: 28px;
+            background: #333;
+            color: #007bff;
+            border-radius: 50%;
             display: flex;
-            flex-direction: column;
-            text-align: left;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-style: italic;
+            cursor: pointer;
+            border: 1px solid #444;
+            transition: 0.3s;
+            z-index: 100;
         }
+        .info-btn:hover { background: #007bff; color: white; }
 
-        .header h1 { 
-            color: #007bff; 
-            margin: 0; 
-            font-size: 20px; 
-            letter-spacing: 0.5px;
-            font-weight: 800;
+        /* POP-UP (MODALE) */
+        .modal {
+            display: none;
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            left: 20px;
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            z-index: 200;
+            animation: fadeIn 0.3s ease;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .header p { 
-            font-size: 10px; 
-            color: #777; 
-            margin: 2px 0 0 0; 
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .modal h3 { margin-top: 0; color: #007bff; font-size: 18px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .info-section { margin-bottom: 15px; font-size: 13px; line-height: 1.5; }
+        .info-section b { color: #000; display: block; margin-bottom: 3px; }
+        .close-btn { background: #f0f0f0; color: #333; padding: 8px; border-radius: 10px; font-size: 12px; text-align: center; cursor: pointer; font-weight: bold; }
 
-        /* TAB BAR */
+        /* UI GENERALE */
         .tab-bar { display: flex; background: #222; border-radius: 12px; padding: 4px; margin-bottom: 20px; }
-        .tab { flex: 1; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #666; transition: 0.3s; text-align: center; }
+        .tab { flex: 1; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; color: #666; text-align: center; }
         .tab.active { background: #007bff; color: white; }
-
-        /* PREVIEW AREA */
-        #preview-list { 
-            display: flex; flex-direction: column; gap: 12px; 
-            max-height: 300px; overflow-y: auto; margin: 15px 0;
-            padding: 10px; background: #0c0c0c; border-radius: 15px; border: 1px solid #1f1f1f;
-        }
-        .preview-card { background: #1e1e1e; padding: 8px; border-radius: 12px; border: 1px solid #2a2a2a; display: flex; flex-direction: column; align-items: center; }
-        .preview-card img { width: 80px; height: 160px; image-rendering: pixelated; border-radius: 4px; background: #000; }
-        .preview-card span { margin-top: 6px; font-size: 12px; color: #007bff; font-weight: bold; }
-
-        /* PULSANTI */
-        button { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin: 6px 0; transition: 0.2s; }
+        #preview-list { display: flex; flex-direction: column; gap: 12px; max-height: 250px; overflow-y: auto; margin: 15px 0; padding: 10px; background: #0c0c0c; border-radius: 15px; }
+        button { width: 100%; padding: 16px; border-radius: 12px; border: none; font-size: 15px; font-weight: bold; cursor: pointer; margin: 6px 0; }
         .btn-select { background: #2a2a2a; color: #eee; }
-        .btn-send { background: #28a745; color: white; box-shadow: 0 4px 12px rgba(40,167,69,0.2); margin-top: 15px; }
-        .btn-send:active { transform: scale(0.97); }
-        
-        .status { font-size: 13px; color: #007bff; margin-top: 15px; font-weight: 600; text-align: center; }
+        .btn-send { background: #28a745; color: white; }
+        .status { font-size: 13px; color: #007bff; margin-top: 15px; text-align: center; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="info-btn" id="infoBtn" onclick="toggleModal()" onmouseenter="showModal()" onmouseleave="hideModal()">i</div>
+
+    <div class="modal" id="infoModal">
+        <h3>Guida all'uso</h3>
+        
+        <div class="info-section">
+            <b>🚀 Cosa devi fare?</b>
+            Seleziona una o più foto dal tuo telefono, attendi l'anteprima e premi "Invia allo Zaino" stando vicino a Carlo.
+        </div>
+
+        <div class="info-section">
+            <b>🖼️ Singola vs Playlist</b>
+            • <b>Singola:</b> Carica una sola immagine fissa.<br>
+            • <b>Playlist:</b> Carica più foto che ruoteranno ogni mezzo secondo creando un'animazione.
+        </div>
+
+        <div class="info-section">
+            <b>⚠️ Rispetta le Regole</b>
+            È vietato caricare immagini offensive, volgari o inappropriate. Lo zaino è uno strumento creativo, usalo con rispetto!
+        </div>
+
+        <div class="close-btn" onclick="toggleModal()">HO CAPITO</div>
+    </div>
+
     <div class="header">
         <img src="logo.png" alt="ZC"> 
         <div class="header-text">
@@ -122,10 +151,14 @@
 <canvas id="procCanvas" width="16" height="32" style="display:none"></canvas>
 
 <script>
+    // Funzioni per il Pop-up
+    const modal = document.getElementById('infoModal');
+    function toggleModal() { modal.style.display = (modal.style.display === 'block') ? 'none' : 'block'; }
+    function showModal() { if(window.innerWidth > 800) modal.style.display = 'block'; }
+    function hideModal() { if(window.innerWidth > 800) modal.style.display = 'none'; }
+
     let currentMode = 0; 
     let imagesData = [];
-    let bleChar = null;
-    let bleMode = null;
 
     function switchMode(m) {
         currentMode = m;
@@ -137,46 +170,30 @@
     }
 
     document.getElementById('fileInp').onchange = async (e) => {
-        const files = Array.from(e.target.files).slice(0, 20);
+        const files = Array.from(e.target.files).slice(0, 10);
         if(files.length === 0) return;
-
         imagesData = [];
         const list = document.getElementById('preview-list');
         list.innerHTML = ""; 
-
         for (let i = 0; i < files.length; i++) {
-            const dataUrl = await readFileAsDataURL(files[i]);
-            const img = await loadImage(dataUrl);
-            
-            const canvas = document.getElementById('procCanvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 16, 32);
-            ctx.drawImage(img, 0, 0, 16, 32);
-            
-            imagesData.push(ctx.getImageData(0,0,16,32).data);
-
-            const card = document.createElement('div');
-            card.className = "preview-card";
-            card.innerHTML = `<img src="${canvas.toDataURL()}"><span>${currentMode==0 ? 'FOTO' : 'FOTO #' + (i + 1)}</span>`;
-            list.appendChild(card);
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.getElementById('procCanvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, 16, 32);
+                    imagesData.push(ctx.getImageData(0,0,16,32).data);
+                    const card = document.createElement('div');
+                    card.style = "background:#1e1e1e; padding:8px; border-radius:12px; margin-bottom:10px; text-align:center;";
+                    card.innerHTML = `<img src="${canvas.toDataURL()}" style="width:60px; height:120px; image-rendering:pixelated; border-radius:4px;"><br><span style="color:#007bff; font-size:10px;">FOTO ${i+1}</span>`;
+                    list.appendChild(card);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(files[i]);
         }
     };
-
-    function readFileAsDataURL(file) {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.readAsDataURL(file);
-        });
-    }
-
-    function loadImage(url) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.src = url;
-        });
-    }
 
     async function connectAndSend() {
         if(imagesData.length === 0) return alert("Scegli le foto!");
@@ -188,13 +205,11 @@
             });
             const server = await device.gatt.connect();
             const service = await server.getPrimaryService('19b10000-e8f2-537e-4f6c-d104768a1214');
-            bleChar = await service.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
-            bleMode = await service.getCharacteristic('19b10002-e8f2-537e-4f6c-d104768a1214');
+            const bleChar = await service.getCharacteristic('19b10001-e8f2-537e-4f6c-d104768a1214');
+            const bleMode = await service.getCharacteristic('19b10002-e8f2-537e-4f6c-d104768a1214');
 
-            const mVal = currentMode === 0 ? 0 : imagesData.length;
-            await bleMode.writeValue(new Uint8Array([mVal]));
+            await bleMode.writeValue(new Uint8Array([currentMode === 0 ? 0 : imagesData.length]));
 
-            document.getElementById('status').innerText = "INVIO IN CORSO...";
             for (let data of imagesData) {
                 let rgb = [];
                 for (let i = 0; i < data.length; i += 4) rgb.push(data[i], data[i+1], data[i+2]);
@@ -204,10 +219,7 @@
                 }
             }
             document.getElementById('status').innerText = "ZAINO AGGIORNATO! ✅";
-        } catch (e) { 
-            document.getElementById('status').innerText = "ERRORE BLUETOOTH ❌"; 
-            console.log(e);
-        }
+        } catch (e) { document.getElementById('status').innerText = "ERRORE CONNESSIONE ❌"; }
     }
 </script>
 </body>

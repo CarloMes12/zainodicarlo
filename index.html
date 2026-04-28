@@ -227,10 +227,10 @@
             for (let data of imagesData) {
                 let rgb = [];
                 for (let i = 0; i < data.length; i += 4) rgb.push(data[i], data[i+1], data[i+2]);
-                for (let i = 0; i < rgb.length; i += 450) {
-                    await bleChar.writeValueWithoutResponse(new Uint8Array(rgb.slice(i, i + 450)));
-                    await new Promise(r => setTimeout(r, 40));
-                }
+                for (let i = 0; i < rgb.length; i += 240) {
+    await bleChar.writeValue(new Uint8Array(rgb.slice(i, i + 240)));
+    await new Promise(r => setTimeout(r, 60));
+}
             }
             document.getElementById('status').innerText = "ZAINO AGGIORNATO! ✅";
         } catch (e) { document.getElementById('status').innerText = "ERRORE CONNESSIONE ❌"; }
